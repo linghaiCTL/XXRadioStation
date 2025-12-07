@@ -3,68 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>XX电台 - One Last Kiss</title>
+    <title>XX电台 - Daily Music</title>
     
-    <!-- 1. 引入 Tailwind CSS (样式库) -->
+    <!-- 1. 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'spin-slow': 'spin 8s linear infinite',
+                    }
+                }
+            }
+        }
+    </script>
     
-    <!-- 2. 引入 React 和 Babel (核心引擎) -->
+    <!-- 2. 引入 React 和 Babel -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        /* 额外的动画样式 */
-        @keyframes spin-slow {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
         body { -webkit-tap-highlight-color: transparent; }
+        /* 隐藏滚动条但保留滚动功能 */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-white">
     <div id="root"></div>
 
     <script type="text/babel">
-        // 简化版的图标组件 (SVG)
         const Icons = {
             Play: ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>,
             Pause: ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>,
             Heart: ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>,
             Share2: ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>,
-            Music: ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+            Music: ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>,
+            List: ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>,
+            X: ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         };
 
         const { useState, useEffect, useRef } = React;
 
+        // 默认兜底数据 (如果 fetch 失败或者没有 json 文件时显示)
+        const DEFAULT_DATA = [
+            {
+                id: "demo-001",
+                date: "2025.12.07",
+                title: "One Last Kiss",
+                artist: "宇多田光",
+                message: "既然不知道写点什么，那就把表达权交给旋律吧。这首歌有一种神奇的魔力，它听起来轻快，底色却是深情的告别。\n\n无论生活怎么循环（Loop），都要记得去爱那个真实的自己。",
+                quote: "Can you give me one last kiss?",
+                audioUrl: "", // 如果留空，播放器不会真正播放
+                coverUrl: "", // 如果留空，显示默认黑胶中心
+                theme: { primary: "#e60012", secondary: "#ffffff" }
+            }
+        ];
+
         const MusicCard = () => {
+            const [playlist, setPlaylist] = useState(DEFAULT_DATA);
+            const [currentIndex, setCurrentIndex] = useState(0);
             const [isPlaying, setIsPlaying] = useState(false);
             const [currentTime, setCurrentTime] = useState(0);
+            const [duration, setDuration] = useState(0);
+            const [showHistory, setShowHistory] = useState(false);
+            const [imgLoaded, setImgLoaded] = useState(null); // 存储加载好的图片对象
+
+            const audioRef = useRef(new Audio());
             const canvasRef = useRef(null);
             const animationRef = useRef(null);
 
-            // 你的推歌数据
-            const songData = {
-                title: "One Last Kiss",
-                artist: "宇多田光 (Hikaru Utada)",
-                date: "2025.12.07 | XX电台 Vol.257",
-                message: "既然不知道写点什么，那就把表达权交给旋律吧。这首歌有一种神奇的魔力，它听起来轻快，底色却是深情的告别。",
-                quote: "Can you give me one last kiss?",
-                theme: { primary: "#e60012", secondary: "#ffffff" }
+            const currentSong = playlist[currentIndex] || DEFAULT_DATA[0];
+
+            // 1. 初始化：加载 playlist.json
+            useEffect(() => {
+                fetch('./playlist.json')
+                    .then(res => res.json())
+                    .then(data => {
+                        // 假设 JSON 是按时间倒序排的，直接取第一个作为最新
+                        if (Array.isArray(data) && data.length > 0) {
+                            setPlaylist(data);
+                        }
+                    })
+                    .catch(err => console.log("使用默认数据，未找到 playlist.json"));
+            }, []);
+
+            // 2. 切歌时的逻辑：重置音频、加载图片
+            useEffect(() => {
+                // 音频重置
+                setIsPlaying(false);
+                setCurrentTime(0);
+                if (currentSong.audioUrl) {
+                    audioRef.current.src = currentSong.audioUrl;
+                    audioRef.current.load();
+                }
+
+                // 图片预加载
+                if (currentSong.coverUrl) {
+                    const img = new Image();
+                    img.src = currentSong.coverUrl;
+                    img.onload = () => setImgLoaded(img);
+                    img.onerror = () => setImgLoaded(null);
+                } else {
+                    setImgLoaded(null);
+                }
+            }, [currentSong]);
+
+            // 3. 音频事件监听
+            useEffect(() => {
+                const audio = audioRef.current;
+                
+                const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
+                const handleLoadedMetadata = () => setDuration(audio.duration);
+                const handleEnded = () => setIsPlaying(false);
+
+                audio.addEventListener('timeupdate', handleTimeUpdate);
+                audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+                audio.addEventListener('ended', handleEnded);
+
+                return () => {
+                    audio.removeEventListener('timeupdate', handleTimeUpdate);
+                    audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+                    audio.removeEventListener('ended', handleEnded);
+                    audio.pause();
+                };
+            }, []);
+
+            // 4. 播放控制
+            const togglePlay = () => {
+                if (!currentSong.audioUrl) {
+                    // 如果没有音频链接，仅做 UI 模拟
+                    setIsPlaying(!isPlaying);
+                    return;
+                }
+
+                if (isPlaying) {
+                    audioRef.current.pause();
+                } else {
+                    audioRef.current.play().catch(e => console.error("播放失败", e));
+                }
+                setIsPlaying(!isPlaying);
             };
 
-            // Canvas 绘图逻辑
+            // 5. Canvas 渲染 (包含图片绘制逻辑)
             useEffect(() => {
                 const canvas = canvasRef.current;
                 const ctx = canvas.getContext('2d');
                 
-                // 适配不同屏幕的清晰度
                 const updateSize = () => {
                     const dpr = window.devicePixelRatio || 1;
-                    // 获取父容器的大小
                     const parent = canvas.parentElement;
                     const rect = parent.getBoundingClientRect();
-                    
                     canvas.width = rect.width * dpr;
                     canvas.height = rect.height * dpr;
                     ctx.scale(dpr, dpr);
@@ -72,8 +168,6 @@
                 };
 
                 let { w, h } = updateSize();
-                
-                // 监听窗口大小改变 (手机旋转等)
                 window.addEventListener('resize', () => { ({ w, h } = updateSize()) });
 
                 let rotation = 0;
@@ -85,12 +179,11 @@
 
                     ctx.clearRect(0, 0, w, h);
 
-                    // 1. 动态声波背景
+                    // --- 动态声波 ---
                     if (isPlaying) {
                         const bars = 40;
                         for (let i = 0; i < bars; i++) {
                             const angle = (i / bars) * Math.PI * 2;
-                            // 让波浪随机跳动
                             const barHeight = 10 + Math.sin(Date.now() / 100 + i) * 10 + Math.random() * 20;
                             const x1 = cx + Math.cos(angle) * (radius + 5);
                             const y1 = cy + Math.sin(angle) * (radius + 5);
@@ -100,19 +193,19 @@
                             ctx.beginPath();
                             ctx.moveTo(x1, y1);
                             ctx.lineTo(x2, y2);
-                            ctx.strokeStyle = `rgba(230, 0, 18, ${0.2 + Math.random() * 0.3})`;
+                            ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 + Math.random() * 0.2})`; // 白色波纹通用性更好
                             ctx.lineWidth = 3;
                             ctx.stroke();
                         }
                     }
 
-                    // 2. 绘制唱片
+                    // --- 旋转逻辑 ---
                     ctx.save();
                     ctx.translate(cx, cy);
-                    if (isPlaying) rotation += 0.02;
+                    if (isPlaying) rotation += 0.02; // 旋转速度
                     ctx.rotate(rotation);
 
-                    // 唱片本体
+                    // --- 黑胶本体 ---
                     ctx.beginPath();
                     ctx.arc(0, 0, radius, 0, Math.PI * 2);
                     ctx.fillStyle = '#111';
@@ -121,7 +214,7 @@
                     ctx.fill();
                     ctx.shadowBlur = 0;
 
-                    // 唱片纹理
+                    // --- 纹理 ---
                     ctx.strokeStyle = '#222';
                     ctx.lineWidth = 1;
                     for (let r = radius * 0.35; r < radius - 2; r += 5) {
@@ -130,17 +223,30 @@
                         ctx.stroke();
                     }
 
-                    // 封面 Label
+                    // --- 封面/Label 绘制 ---
                     ctx.beginPath();
                     ctx.arc(0, 0, radius * 0.35, 0, Math.PI * 2);
-                    ctx.fillStyle = songData.theme.secondary;
-                    ctx.fill();
+                    ctx.clip(); // 裁剪成圆形
 
-                    // 封面红点
-                    ctx.beginPath();
-                    ctx.arc(0, 0, radius * 0.15, 0, Math.PI * 2);
-                    ctx.fillStyle = songData.theme.primary;
-                    ctx.fill();
+                    if (imgLoaded) {
+                        // 如果有图片，绘制图片
+                        // 简单的 cover 模式算法
+                        const scale = Math.max((radius * 0.7) / imgLoaded.width, (radius * 0.7) / imgLoaded.height) * 2.2; 
+                        // * 2.2 是为了稍微放大一点填满圆心
+                        const imgW = imgLoaded.width * scale;
+                        const imgH = imgLoaded.height * scale;
+                        ctx.drawImage(imgLoaded, -imgW / 2, -imgH / 2, imgW, imgH);
+                    } else {
+                        // 没图片，绘制默认 Label
+                        ctx.fillStyle = currentSong.theme?.secondary || '#fff';
+                        ctx.fill();
+                        
+                        // 红点
+                        ctx.beginPath();
+                        ctx.arc(0, 0, radius * 0.15, 0, Math.PI * 2);
+                        ctx.fillStyle = currentSong.theme?.primary || '#e60012';
+                        ctx.fill();
+                    }
 
                     ctx.restore();
                     animationRef.current = requestAnimationFrame(render);
@@ -148,39 +254,41 @@
 
                 render();
                 return () => cancelAnimationFrame(animationRef.current);
-            }, [isPlaying]);
+            }, [isPlaying, imgLoaded, currentSong]); // 当图片加载完或切歌时重新绑定
 
-            // 模拟进度条
-            useEffect(() => {
-                let interval;
-                if (isPlaying) {
-                    interval = setInterval(() => setCurrentTime(t => t + 1), 1000);
-                }
-                return () => clearInterval(interval);
-            }, [isPlaying]);
+            // 格式化时间
+            const formatTime = (s) => {
+                if(!s) return "0:00";
+                const mins = Math.floor(s / 60);
+                const secs = Math.floor(s % 60).toString().padStart(2, '0');
+                return `${mins}:${secs}`;
+            };
 
-            const formatTime = (s) => `${Math.floor(s / 60)}:${Math.floor(s % 60).toString().padStart(2, '0')}`;
+            const progress = duration ? (currentTime / duration) * 100 : 0;
 
             return (
-                <div className="min-h-screen w-full flex items-center justify-center p-4 bg-gray-900 font-sans">
-                    <div className="w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col relative">
+                <div className="min-h-screen w-full flex items-center justify-center p-4 bg-gray-900 font-sans overflow-hidden relative">
+                    
+                    {/* 主要卡片 */}
+                    <div className="w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col relative z-10 h-[85vh]">
                         
-                        {/* 顶部 */}
-                        <div className="flex justify-between items-center p-6 border-b border-white/5">
+                        {/* 顶部: 日期与状态 */}
+                        <div className="flex justify-between items-center p-5 border-b border-white/5 shrink-0">
                             <div className="flex items-center space-x-2">
                                 <span className={`w-2 h-2 bg-red-500 rounded-full ${isPlaying ? 'animate-pulse' : ''}`}></span>
                                 <span className="text-xs font-bold tracking-widest text-gray-400 uppercase">ON AIR</span>
                             </div>
-                            <div className="text-xs font-mono text-gray-500">{songData.date}</div>
+                            <div className="text-xs font-mono text-gray-500">{currentSong.date}</div>
                         </div>
 
-                        {/* 中间 Canvas */}
-                        <div className="relative w-full aspect-square bg-gradient-to-b from-gray-800 to-black">
+                        {/* 中间: Canvas 唱片 (自适应高度) */}
+                        <div className="relative w-full aspect-square shrink-0 bg-gradient-to-b from-gray-800 to-black">
                             <canvas ref={canvasRef} className="w-full h-full block" />
                             
+                            {/* 居中播放按钮 (仅暂停时显示) */}
                             {!isPlaying && (
                                 <button 
-                                    onClick={() => setIsPlaying(true)}
+                                    onClick={togglePlay}
                                     className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 hover:scale-110 transition-transform cursor-pointer z-10"
                                 >
                                     <Icons.Play className="w-6 h-6 text-white ml-1" />
@@ -188,40 +296,106 @@
                             )}
                         </div>
 
-                        {/* 底部信息 */}
-                        <div className="p-6 space-y-4">
-                            <div className="flex justify-between items-end">
+                        {/* 底部: 信息与控制 (Flex column 填满剩余空间) */}
+                        <div className="p-6 flex flex-col flex-1 min-h-0">
+                            
+                            {/* 标题 */}
+                            <div className="flex justify-between items-end shrink-0 mb-4">
                                 <div>
-                                    <h1 className="text-2xl font-bold text-white mb-1">{songData.title}</h1>
-                                    <p className="text-red-400 font-medium">{songData.artist}</p>
+                                    <h1 className="text-xl font-bold text-white mb-1 line-clamp-1">{currentSong.title}</h1>
+                                    <p className="text-red-400 font-medium text-sm">{currentSong.artist}</p>
                                 </div>
                                 <Icons.Heart className="w-6 h-6 text-gray-500 hover:text-red-500 cursor-pointer transition-colors" />
                             </div>
 
-                            <div className="space-y-1">
+                            {/* 进度条 */}
+                            <div className="space-y-1 shrink-0 mb-4">
                                 <div className="h-1 bg-gray-700 rounded-full overflow-hidden">
-                                    <div className="h-full bg-red-500 transition-all duration-1000 ease-linear" style={{ width: `${(currentTime % 252) / 252 * 100}%` }}></div>
+                                    <div className="h-full bg-red-500 transition-all duration-100 ease-linear" style={{ width: `${progress}%` }}></div>
                                 </div>
                                 <div className="flex justify-between text-xs text-gray-500 font-mono">
                                     <span>{formatTime(currentTime)}</span>
-                                    <span>4:12</span>
+                                    <span>{formatTime(duration || 0)}</span>
                                 </div>
                             </div>
 
-                            <div className="bg-white/5 rounded-xl p-4 border border-white/5 mt-4">
-                                <p className="text-sm text-gray-300 leading-relaxed mb-3">{songData.message}</p>
-                                <p className="text-xs font-serif italic text-gray-500 text-right">— {songData.quote}</p>
+                            {/* 滚动文案区域 (长文案支持) */}
+                            <div className="bg-white/5 rounded-xl p-4 border border-white/5 flex-1 overflow-y-auto scrollbar-hide">
+                                <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-line">
+                                    {currentSong.message}
+                                </p>
+                                {currentSong.quote && (
+                                    <p className="text-xs font-serif italic text-gray-500 text-right mt-4">
+                                        — {currentSong.quote}
+                                    </p>
+                                )}
                             </div>
                             
-                            <div className="flex items-center justify-between pt-2">
-                                <button className="p-2 hover:bg-white/10 rounded-full text-gray-400"><Icons.Share2 className="w-5 h-5" /></button>
-                                <button onClick={() => setIsPlaying(!isPlaying)} className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center shadow-lg hover:bg-red-700 text-white transition-transform active:scale-95">
+                            {/* 底部按钮栏 */}
+                            <div className="flex items-center justify-between pt-4 shrink-0">
+                                <button className="p-2 hover:bg-white/10 rounded-full text-gray-400" onClick={() => alert("分享功能开发中...")}>
+                                    <Icons.Share2 className="w-5 h-5" />
+                                </button>
+
+                                <button onClick={togglePlay} className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center shadow-lg hover:bg-red-700 text-white transition-transform active:scale-95">
                                     {isPlaying ? <Icons.Pause className="w-5 h-5" /> : <Icons.Play className="w-5 h-5 ml-1" />}
                                 </button>
-                                <button className="p-2 hover:bg-white/10 rounded-full text-gray-400"><Icons.Music className="w-5 h-5" /></button>
+
+                                {/* 历史记录开关 */}
+                                <button 
+                                    className="p-2 hover:bg-white/10 rounded-full text-gray-400"
+                                    onClick={() => setShowHistory(true)}
+                                >
+                                    <Icons.List className="w-5 h-5" />
+                                </button>
                             </div>
                         </div>
                     </div>
+
+                    {/* 历史记录抽屉 (Cover Layer) */}
+                    <div className={`absolute inset-0 z-50 bg-gray-900/95 backdrop-blur-xl transition-transform duration-300 ease-in-out ${showHistory ? 'translate-y-0' : 'translate-y-full'}`}>
+                        <div className="flex flex-col h-full max-w-md mx-auto p-6">
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-xl font-bold text-white">往期推送</h2>
+                                <button onClick={() => setShowHistory(false)} className="p-2 bg-white/10 rounded-full">
+                                    <Icons.X className="w-5 h-5" />
+                                </button>
+                            </div>
+                            
+                            <div className="flex-1 overflow-y-auto space-y-3">
+                                {playlist.map((song, index) => (
+                                    <div 
+                                        key={song.id || index}
+                                        onClick={() => {
+                                            setCurrentIndex(index);
+                                            setShowHistory(false);
+                                        }}
+                                        className={`p-4 rounded-xl border flex items-center space-x-4 cursor-pointer transition-colors ${
+                                            currentIndex === index 
+                                            ? 'bg-red-500/20 border-red-500' 
+                                            : 'bg-white/5 border-white/5 hover:bg-white/10'
+                                        }`}
+                                    >
+                                        <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
+                                            {song.coverUrl ? (
+                                                <img src={song.coverUrl} className="w-full h-full object-cover" alt="art" />
+                                            ) : (
+                                                <Icons.Music className="w-5 h-5 text-gray-400" />
+                                            )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-white font-medium truncate">{song.title}</div>
+                                            <div className="text-xs text-gray-400">{song.date}</div>
+                                        </div>
+                                        {currentIndex === index && (
+                                            <div className="text-xs font-bold text-red-500">PLAYING</div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             );
         };
@@ -231,3 +405,36 @@
     </script>
 </body>
 </html>
+```
+
+### 如何“Push”来更新内容？
+
+现在网页已经准备好了。你需要按照以下格式准备数据文件。
+
+**1. 创建 `playlist.json`**
+在仓库根目录创建一个文件，内容格式如下：
+
+```json
+[
+  {
+    "id": "20251208",
+    "date": "2025.12.08 | XX电台 Vol.258",
+    "title": "晴天",
+    "artist": "周杰伦",
+    "message": "故事的小黄花，从出生那年就飘着...",
+    "quote": "Re Re So So Si Do Si La So",
+    "audioUrl": "audio/qingtian.mp3",
+    "coverUrl": "images/qingtian_cover.jpg",
+    "theme": { "primary": "#3b82f6", "secondary": "#ffffff" }
+  },
+  {
+    "id": "20251207",
+    "date": "2025.12.07 | XX电台 Vol.257",
+    "title": "One Last Kiss",
+    "artist": "宇多田光",
+    "message": "...",
+    "audioUrl": "audio/onelastkiss.mp3",
+    "coverUrl": "",
+    "theme": { "primary": "#e60012", "secondary": "#ffffff" }
+  }
+]
