@@ -21,22 +21,19 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        /* 核心修复：防止手机回弹效果，强制全屏 */
         html, body {
             height: 100%;
-            overflow: hidden;
+            overflow: hidden; /* 防止整体页面滚动，只允许内部区域滚动 */
             background-color: #111827;
             -webkit-tap-highlight-color: transparent;
         }
         
-        /* 隐藏滚动条 */
+        /* 隐藏滚动条但保留功能 */
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-
-        /* 平滑过渡动画 */
-        .transition-layout {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        
+        /* 底部安全区适配 */
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
     </style>
 </head>
 <body>
@@ -50,9 +47,8 @@
             Heart: ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" /></svg>,
             List: ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>,
             X: ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>,
-            BookOpen: ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg>,
-            ChevronDown: ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>,
-            Music: ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+            Music: ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>,
+            Quote: ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M14.017 21L14.017 18C14.017 16.8954 14.9124 16 16.017 16H19.017C19.5693 16 20.017 15.5523 20.017 15V9C20.017 8.44772 19.5693 8 19.017 8H15.017C14.4647 8 14.017 8.44772 14.017 9V11C14.017 11.5523 13.5693 12 13.017 12H12.017V5H22.017V15C22.017 18.3137 19.3307 21 16.017 21H14.017ZM5.0166 21L5.0166 18C5.0166 16.8954 5.91203 16 7.0166 16H10.0166C10.5689 16 11.0166 15.5523 11.0166 15V9C11.0166 8.44772 10.5689 8 10.0166 8H6.0166C5.46432 8 5.0166 8.44772 5.0166 9V11C5.0166 11.5523 4.56889 12 4.0166 12H3.0166V5H13.0166V15C13.0166 18.3137 10.3303 21 7.0166 21H5.0166Z"></path></svg>
         };
 
         const { useState, useEffect, useRef } = React;
@@ -63,7 +59,7 @@
                 date: "2025.12.08",
                 title: "One Last Kiss",
                 artist: "宇多田光",
-                message: "今天的天气很好，就像这首歌一样。\n\n点击上方的唱片，可以展开阅读这封完整的信件。\n\n我想告诉你的是，无论发生什么，都要记得爱自己。这不仅是一首歌，更是一段关于告别的旅程。",
+                message: "今天的天气很好，就像这首歌一样。\n\n我想告诉你的是，无论发生什么，都要记得爱自己。这不仅是一首歌，更是一段关于告别的旅程。\n\n不需要太多的言语，有时候旋律就是最好的表达。希望你在听到这段音乐的时候，能感到一丝平静。",
                 quote: "Can you give me one last kiss?",
                 audioUrl: "",
                 coverUrl: "",
@@ -78,10 +74,6 @@
             const [currentTime, setCurrentTime] = useState(0);
             const [duration, setDuration] = useState(0);
             const [showHistory, setShowHistory] = useState(false);
-            
-            // 新增状态：控制视图模式 'player' | 'reader'
-            const [viewMode, setViewMode] = useState('player'); 
-            
             const [imgLoaded, setImgLoaded] = useState(null);
             
             const audioRef = useRef(new Audio());
@@ -90,7 +82,6 @@
 
             const currentSong = playlist[currentIndex] || DEFAULT_DATA[0];
 
-            // 加载 playlist
             useEffect(() => {
                 fetch('./playlist.json')
                     .then(res => res.json())
@@ -98,7 +89,6 @@
                     .catch(err => console.log("Default data used"));
             }, []);
 
-            // 切歌逻辑
             useEffect(() => {
                 setIsPlaying(false);
                 setCurrentTime(0);
@@ -116,7 +106,6 @@
                 }
             }, [currentSong]);
 
-            // 音频播放控制
             useEffect(() => {
                 const audio = audioRef.current;
                 const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
@@ -135,8 +124,7 @@
                 };
             }, []);
 
-            const togglePlay = (e) => {
-                e.stopPropagation(); // 防止冒泡触发 mode 切换
+            const togglePlay = () => {
                 if (!currentSong.audioUrl) {
                     setIsPlaying(!isPlaying);
                     return;
@@ -146,12 +134,10 @@
                 setIsPlaying(!isPlaying);
             };
 
-            // Canvas 渲染
+            // Canvas 渲染逻辑 (针对小尺寸优化)
             useEffect(() => {
                 const canvas = canvasRef.current;
-                // 如果在阅读模式，canvas 可能被隐藏或变小，这里做个保护
                 if(!canvas) return;
-
                 const ctx = canvas.getContext('2d');
                 
                 const updateSize = () => {
@@ -171,44 +157,40 @@
                 let rotation = 0;
 
                 const render = () => {
-                    // 如果画布尺寸太小（比如在切换动画中），跳过绘制
                     if (w === 0 || h === 0) return;
-
                     const cx = w / 2;
                     const cy = h / 2;
-                    // 在 reader 模式下，圆盘稍微缩小一点
-                    const radius = Math.min(w, h) * (viewMode === 'player' ? 0.38 : 0.30);
+                    const radius = Math.min(w, h) * 0.45; // 稍微大一点，因为现在是在一个固定的小区域里
 
                     ctx.clearRect(0, 0, w, h);
 
-                    // 1. 动态波纹
+                    // 1. 波纹 (仅在播放时)
                     if (isPlaying) {
-                        const bars = 40;
+                        const bars = 30;
                         for (let i = 0; i < bars; i++) {
                             const angle = (i / bars) * Math.PI * 2;
-                            const barHeight = 8 + Math.sin(Date.now() / 100 + i) * 8 + Math.random() * 15;
-                            const rBase = radius + 5;
+                            const barHeight = 4 + Math.sin(Date.now() / 100 + i) * 6 + Math.random() * 8;
+                            const rBase = radius + 2;
                             const x1 = cx + Math.cos(angle) * rBase;
                             const y1 = cy + Math.sin(angle) * rBase;
                             const x2 = cx + Math.cos(angle) * (rBase + barHeight);
                             const y2 = cy + Math.sin(angle) * (rBase + barHeight);
-                            
                             ctx.beginPath();
                             ctx.moveTo(x1, y1);
                             ctx.lineTo(x2, y2);
-                            ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 + Math.random() * 0.2})`;
+                            ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 + Math.random() * 0.15})`;
                             ctx.lineWidth = 2;
                             ctx.stroke();
                         }
                     }
 
-                    // 2. 旋转
+                    // 2. 旋转 & 绘制
                     ctx.save();
                     ctx.translate(cx, cy);
                     if (isPlaying) rotation += 0.02;
                     ctx.rotate(rotation);
 
-                    // 3. 黑胶主体
+                    // 黑胶
                     ctx.beginPath();
                     ctx.arc(0, 0, radius, 0, Math.PI * 2);
                     ctx.fillStyle = '#111';
@@ -217,20 +199,19 @@
                     ctx.fill();
                     ctx.shadowBlur = 0;
 
-                    // 4. 纹理
+                    // 纹理
                     ctx.strokeStyle = '#222';
                     ctx.lineWidth = 1;
-                    for (let r = radius * 0.35; r < radius - 2; r += 5) {
+                    for (let r = radius * 0.35; r < radius - 2; r += 4) {
                         ctx.beginPath();
                         ctx.arc(0, 0, r, 0, Math.PI * 2);
                         ctx.stroke();
                     }
 
-                    // 5. 封面
+                    // 封面
                     ctx.beginPath();
                     ctx.arc(0, 0, radius * 0.35, 0, Math.PI * 2);
                     ctx.clip();
-
                     if (imgLoaded) {
                         const scale = Math.max((radius * 0.7) / imgLoaded.width, (radius * 0.7) / imgLoaded.height) * 2.2; 
                         const imgW = imgLoaded.width * scale;
@@ -244,170 +225,137 @@
                         ctx.fillStyle = currentSong.theme?.primary || '#e60012';
                         ctx.fill();
                     }
-
                     ctx.restore();
                     animationRef.current = requestAnimationFrame(render);
                 };
 
                 render();
                 return () => cancelAnimationFrame(animationRef.current);
-            }, [isPlaying, imgLoaded, currentSong, viewMode]);
+            }, [isPlaying, imgLoaded, currentSong]);
 
             const formatTime = (s) => `${Math.floor(s / 60)}:${Math.floor(s % 60).toString().padStart(2, '0')}`;
             const progress = duration ? (currentTime / duration) * 100 : 0;
 
             return (
-                // 核心修复：使用 h-[100dvh] 解决移动端截断问题
-                <div className="h-[100dvh] w-full flex items-center justify-center bg-gray-900 font-sans overflow-hidden">
+                // 布局结构：Flex Column
+                // h-[100dvh] 确保填满屏幕，不溢出
+                <div className="h-[100dvh] w-full bg-gray-900 font-sans flex flex-col relative overflow-hidden">
                     
-                    {/* 背景模糊层 (氛围感) */}
+                    {/* 背景氛围 */}
                     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500/20 rounded-full blur-[100px]" />
-                        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-red-500/20 rounded-full blur-[100px]" />
+                        <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[40%] bg-blue-500/10 rounded-full blur-[80px]" />
+                        <div className="absolute bottom-[20%] right-[-10%] w-[50%] h-[40%] bg-red-500/10 rounded-full blur-[80px]" />
                     </div>
 
-                    {/* 主卡片容器：设置为 flex-col 以便精确控制内部高度 */}
-                    <div className="w-full h-full md:h-[90vh] md:max-w-md bg-white/5 backdrop-blur-2xl md:rounded-3xl shadow-2xl flex flex-col relative z-10 transition-all duration-300">
+                    {/* 1. Header (固定高度) */}
+                    <div className="h-14 flex justify-between items-center px-6 shrink-0 z-20 border-b border-white/5 bg-gray-900/50 backdrop-blur-sm">
+                        <div className="flex items-center space-x-2">
+                            <span className={`w-2 h-2 bg-red-500 rounded-full ${isPlaying ? 'animate-pulse' : ''}`}></span>
+                            <span className="text-xs font-bold tracking-widest text-gray-400 uppercase">XX RADIO</span>
+                        </div>
+                        <div className="text-xs font-mono text-gray-500">{currentSong.date}</div>
+                    </div>
+
+                    {/* 2. 唱片播放区 (固定高度，占比约 35%-40%) */}
+                    <div className="shrink-0 h-[35vh] min-h-[250px] relative w-full flex items-center justify-center z-10">
+                        <canvas ref={canvasRef} className="w-full h-full" />
                         
-                        {/* 顶部栏 */}
-                        <div className="flex justify-between items-center p-5 border-b border-white/5 shrink-0 z-20">
-                            <div className="flex items-center space-x-2">
-                                <span className={`w-2 h-2 bg-red-500 rounded-full ${isPlaying ? 'animate-pulse' : ''}`}></span>
-                                <span className="text-xs font-bold tracking-widest text-gray-400 uppercase">ON AIR</span>
-                            </div>
-                            <div className="text-xs font-mono text-gray-500">{currentSong.date}</div>
-                        </div>
-
-                        {/* --- 动态内容区 (Flex-1 占据剩余空间) --- */}
-                        <div className="flex-1 relative overflow-hidden flex flex-col">
-                            
-                            {/* 1. 唱片/可视化层 */}
-                            <div 
-                                className={`w-full transition-all duration-500 ease-in-out relative flex items-center justify-center
-                                    ${viewMode === 'player' ? 'h-[55%] opacity-100' : 'h-[0%] opacity-0 pointer-events-none'}
-                                `}
-                                onClick={() => setViewMode('reader')} // 点击切换到阅读
+                        {/* 播放暂停按钮叠加在唱片中心 (可选，用户习惯) */}
+                        {!isPlaying && (
+                             <button 
+                                onClick={togglePlay}
+                                className="absolute w-14 h-14 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 hover:scale-105 transition-transform"
                             >
-                                <div className="absolute inset-0 bg-gradient-to-b from-gray-800/50 to-transparent pointer-events-none" />
-                                <canvas ref={canvasRef} className="w-full h-full absolute inset-0 block" />
-                                
-                                {/* 提示文字 */}
-                                {viewMode === 'player' && (
-                                    <div className="absolute bottom-4 text-xs text-white/50 bg-black/30 px-3 py-1 rounded-full backdrop-blur-md animate-bounce">
-                                        点击唱片阅读今日推送文案
-                                    </div>
-                                )}
-
-                                {/* 播放按钮 (仅暂停时显示) */}
-                                {!isPlaying && viewMode === 'player' && (
-                                    <button 
-                                        onClick={togglePlay}
-                                        className="absolute z-20 w-16 h-16 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 hover:scale-110 transition-transform"
-                                    >
-                                        <Icons.Play className="w-6 h-6 text-white ml-1" />
-                                    </button>
-                                )}
-                            </div>
-
-                            {/* 2. 文案阅读层 */}
-                            <div 
-                                className={`flex-1 flex flex-col transition-all duration-500 ease-in-out bg-black/20
-                                    ${viewMode === 'player' ? 'translate-y-0' : '-translate-y-[20%] h-full'}
-                                `}
-                            >
-                                {/* 歌曲信息 (始终显示，但在阅读模式下稍微紧凑一点) */}
-                                <div className="px-6 pt-4 shrink-0 flex justify-between items-end">
-                                    <div>
-                                        <h1 className="text-xl font-bold text-white mb-1 line-clamp-1">{currentSong.title}</h1>
-                                        <p className="text-red-400 font-medium text-sm">{currentSong.artist}</p>
-                                    </div>
-                                    <div className="flex space-x-3">
-                                        {/* 切换视图的按钮 */}
-                                        <button 
-                                            onClick={() => setViewMode(viewMode === 'player' ? 'reader' : 'player')}
-                                            className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
-                                        >
-                                            {viewMode === 'player' ? <Icons.BookOpen className="w-5 h-5 text-white" /> : <Icons.ChevronDown className="w-5 h-5 text-white" />}
-                                        </button>
-                                        <Icons.Heart className="w-6 h-6 p-0.5 text-gray-500 hover:text-red-500 transition-colors" />
-                                    </div>
-                                </div>
-
-                                {/* 文案滚动区 */}
-                                <div 
-                                    className={`relative px-6 py-4 overflow-y-auto scrollbar-hide transition-all duration-500
-                                        ${viewMode === 'player' ? 'flex-none h-32 mask-bottom' : 'flex-1'}
-                                    `}
-                                    style={{
-                                        maskImage: viewMode === 'player' ? 'linear-gradient(to bottom, black 60%, transparent 100%)' : 'none',
-                                        WebkitMaskImage: viewMode === 'player' ? 'linear-gradient(to bottom, black 60%, transparent 100%)' : 'none'
-                                    }}
-                                >
-                                    <p className="text-sm md:text-base text-gray-200 leading-7 whitespace-pre-line font-light tracking-wide">
-                                        {currentSong.message}
-                                    </p>
-                                    <p className="text-xs font-serif italic text-gray-500 text-right mt-8 pb-4">
-                                        — {currentSong.quote}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* 底部控制栏 (固定高度，确保永远可见) */}
-                        <div className="h-24 px-6 bg-black/20 backdrop-blur-lg border-t border-white/5 flex flex-col justify-center shrink-0 z-30">
-                            {/* 进度条 */}
-                            <div className="w-full flex items-center space-x-3 text-xs text-gray-500 font-mono mb-3">
-                                <span>{formatTime(currentTime)}</span>
-                                <div className="flex-1 h-1 bg-gray-700 rounded-full overflow-hidden relative">
-                                    <div className="absolute inset-0 bg-red-500 transition-all duration-100 ease-linear" style={{ width: `${progress}%` }}></div>
-                                </div>
-                                <span>{formatTime(duration)}</span>
-                            </div>
-
-                            {/* 按钮行 */}
-                            <div className="flex items-center justify-between">
-                                <button className="p-2 text-gray-400 hover:text-white" onClick={() => alert('已复制链接')}>
-                                    <Icons.List onClick={() => setShowHistory(true)} className="w-6 h-6" />
-                                </button>
-
-                                <button 
-                                    onClick={togglePlay}
-                                    className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center shadow-lg hover:bg-red-700 text-white active:scale-95 transition-transform"
-                                >
-                                    {isPlaying ? <Icons.Pause className="w-5 h-5" /> : <Icons.Play className="w-5 h-5 ml-1" />}
-                                </button>
-
-                                <button className="p-2 text-gray-400 opacity-50 cursor-not-allowed">
-                                    <Icons.Music className="w-6 h-6" />
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* 历史记录遮罩 */}
-                        <div className={`absolute inset-0 z-50 bg-gray-900/95 backdrop-blur-xl transition-transform duration-300 ${showHistory ? 'translate-y-0' : 'translate-y-full'}`}>
-                            <div className="flex flex-col h-full p-6">
-                                <div className="flex justify-between items-center mb-6">
-                                    <h2 className="text-xl font-bold text-white">往期推送</h2>
-                                    <button onClick={() => setShowHistory(false)} className="p-2 bg-white/10 rounded-full">
-                                        <Icons.X className="w-5 h-5" />
-                                    </button>
-                                </div>
-                                <div className="flex-1 overflow-y-auto space-y-3 pb-safe">
-                                    {playlist.map((song, index) => (
-                                        <div 
-                                            key={index}
-                                            onClick={() => { setCurrentIndex(index); setShowHistory(false); setViewMode('player'); }}
-                                            className={`p-4 rounded-xl border flex items-center space-x-4 ${currentIndex === index ? 'bg-red-500/20 border-red-500' : 'bg-white/5 border-white/5'}`}
-                                        >
-                                            <div className="text-white font-medium flex-1 truncate">{song.title} <span className="text-gray-500 text-xs ml-2">{song.date}</span></div>
-                                            {currentIndex === index && <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"/>}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
+                                <Icons.Play className="w-6 h-6 text-white ml-1" />
+                            </button>
+                        )}
                     </div>
+
+                    {/* 3. 歌曲信息 & 文案区 (Flex-1 占据剩余所有空间，可滚动) */}
+                    <div className="flex-1 flex flex-col min-h-0 bg-white/5 rounded-t-3xl backdrop-blur-xl border-t border-white/10 z-20 mx-2 mb-2">
+                        {/* 标题栏 */}
+                        <div className="px-6 pt-5 pb-3 flex justify-between items-end shrink-0">
+                            <div>
+                                <h1 className="text-xl font-bold text-white mb-1 line-clamp-1">{currentSong.title}</h1>
+                                <p className="text-red-400 text-sm font-medium">{currentSong.artist}</p>
+                            </div>
+                            <Icons.Heart className="w-6 h-6 text-gray-500" />
+                        </div>
+
+                        {/* 滚动文案区 */}
+                        <div className="flex-1 overflow-y-auto px-6 pb-4 scrollbar-hide">
+                            <div className="relative pl-4 border-l-2 border-gray-700/50 py-1">
+                                <Icons.Quote className="w-4 h-4 text-gray-600 absolute -top-2 -left-2 bg-gray-900 rounded-full" />
+                                <p className="text-gray-300 text-sm md:text-base leading-7 whitespace-pre-line font-light">
+                                    {currentSong.message}
+                                </p>
+                                <p className="text-xs font-serif italic text-gray-500 text-right mt-6">
+                                    — {currentSong.quote}
+                                </p>
+                            </div>
+                            
+                            {/* 留白，防止最后一行被遮挡 */}
+                            <div className="h-4"></div>
+                        </div>
+                    </div>
+
+                    {/* 4. 底部控制栏 (固定在底部，带安全区) */}
+                    <div className="bg-gray-900/90 backdrop-blur-md border-t border-white/5 px-6 pt-3 pb-3 pb-safe z-30 shrink-0">
+                        {/* 进度条 */}
+                        <div className="flex items-center space-x-3 text-[10px] text-gray-500 font-mono mb-3">
+                            <span className="w-8 text-right">{formatTime(currentTime)}</span>
+                            <div className="flex-1 h-1 bg-gray-800 rounded-full overflow-hidden">
+                                <div className="h-full bg-red-600 transition-all duration-100" style={{ width: `${progress}%` }}></div>
+                            </div>
+                            <span className="w-8">{formatTime(duration)}</span>
+                        </div>
+
+                        {/* 按钮 */}
+                        <div className="flex items-center justify-between px-4">
+                            <button className="text-gray-400 p-2" onClick={() => setShowHistory(true)}>
+                                <Icons.List className="w-6 h-6" />
+                            </button>
+                            
+                            <button 
+                                onClick={togglePlay}
+                                className="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+                            >
+                                {isPlaying ? <Icons.Pause className="w-6 h-6" /> : <Icons.Play className="w-6 h-6 ml-0.5" />}
+                            </button>
+
+                            <button className="text-gray-400 p-2 opacity-50">
+                                <Icons.Music className="w-6 h-6" />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* 历史列表遮罩 */}
+                    <div className={`absolute inset-0 z-50 bg-gray-900/95 backdrop-blur-xl transition-transform duration-300 ${showHistory ? 'translate-y-0' : 'translate-y-full'}`}>
+                         <div className="flex flex-col h-full p-6 pt-12 pb-safe">
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-xl font-bold text-white">历史推送</h2>
+                                <button onClick={() => setShowHistory(false)} className="p-2 bg-white/10 rounded-full">
+                                    <Icons.X className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto space-y-3">
+                                {playlist.map((song, index) => (
+                                    <div 
+                                        key={index}
+                                        onClick={() => { setCurrentIndex(index); setShowHistory(false); }}
+                                        className={`p-4 rounded-xl border flex items-center space-x-4 ${currentIndex === index ? 'bg-red-500/20 border-red-500' : 'bg-white/5 border-white/5'}`}
+                                    >
+                                        <div className="text-white font-medium flex-1 truncate">
+                                            {song.title} 
+                                            <div className="text-gray-500 text-xs mt-1">{song.date}</div>
+                                        </div>
+                                        {currentIndex === index && <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"/>}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             );
         };
